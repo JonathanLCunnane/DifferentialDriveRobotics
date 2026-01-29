@@ -6,19 +6,20 @@ BP = brickpi3.BrickPi3() # Create an instance of the BrickPi3 class. BP will be 
 
 RIGHT_M = BP.PORT_C
 LEFT_M = BP.PORT_B
+TOUCH_S = BP.PORT_1
 
 EFFECTIVE_RADIUS = 2.9 # In cm
 WHEEL_SEPARATION = 15.4 # In cm
 RAD_TO_DEG = 360 / (2*pi)
 DEG_TO_RAD = (2*pi) / 360
 EPSILON = 5 #degrees
-ROTATE_CONST = 1.15# 1.13
-DIST_CONST = 40/(40-2.8)# 40 / (40 - 2.6)
+ROTATE_CONST = 1.14# 1.13
+DIST_CONST = 40/(40-2.64)# 40 / (40 - 2.6)
 MAX_POWER = 35
 LEFT_CONST = 1.05#1.1275
 RIGHT_CONST = 1#1.05
 
-def move_forward(cm: float):
+def move(cm: float):
     """
     cm - The goal distance to move.
     """
@@ -30,7 +31,7 @@ def move_forward(cm: float):
     moved = 0
     BP.set_motor_position(RIGHT_M, start_r + goal_deg)
     BP.set_motor_position(LEFT_M, start_l + goal_deg)
-    while moved < goal_deg - EPSILON:
+    while abs(moved - goal_deg) > EPSILON:
         try:
             now_r = BP.get_motor_encoder(RIGHT_M)
             now_l = BP.get_motor_encoder(LEFT_M)
@@ -74,6 +75,7 @@ try:
     try:
         BP.offset_motor_encoder(RIGHT_M, BP.get_motor_encoder(RIGHT_M)) # reset right motor 
         BP.offset_motor_encoder(LEFT_M, BP.get_motor_encoder(LEFT_M)) # reset left motor
+        BP.set_sensor_type(TOUCH_S, BP.SENSOR_TYPE.TOUCH)
     except IOError as error:
         print(error)
 
@@ -82,10 +84,22 @@ try:
     BP.set_motor_limits(LEFT_M, LEFT_CONST * MAX_POWER)
     BP.set_motor_limits(RIGHT_M, RIGHT_CONST * MAX_POWER)
     
-    for _ in range(4):
-        move_forward(40)
-        rotate(90)
-        
+    last_value = 0
+    while True:
+        try:
+            value = BP.get_sensor(BP.PORT_1)
+            print(value)
+        except brickpi3.SensorError as error:
+            print(error)
+            value = 0
+
+        if value == 1:
+            move(-10)
+        elif last_value == 1:
+             move(10)
+        time.sleep(0.02)
+        last_value = value
+     
     print("Done")
 
 except KeyboardInterrupt: # except the program gets interrupted by Ctrl+C on the keyboard.
