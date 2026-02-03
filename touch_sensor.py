@@ -87,7 +87,7 @@ try:
     last_value = 0
     while True:
         try:
-            value = BP.get_sensor(BP.PORT_1)
+            value = BP.get_sensor(TOUCH_S)
             print(value)
         except brickpi3.SensorError as error:
             print(error)
@@ -95,8 +95,11 @@ try:
 
         if value == 1:
             move(-10)
+            rotate(170)
         elif last_value == 1:
-             move(10)
+            pass
+        BP.set_motor_power(RIGHT_M, MAX_POWER*RIGHT_CONST)
+        BP.set_motor_power(LEFT_M, MAX_POWER*LEFT_CONST)
         time.sleep(0.02)
         last_value = value
      
