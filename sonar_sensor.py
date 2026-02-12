@@ -6,8 +6,8 @@ BP = brickpi3.BrickPi3() # Create an instance of the BrickPi3 class. BP will be 
 
 RIGHT_M = BP.PORT_C
 LEFT_M = BP.PORT_B
-TOUCH_S = BP.PORT_1
-SONAR_S = BP.PORT_3
+TOUCH_S = BP.PORT_3
+SONAR_S = BP.PORT_1
 
 EFFECTIVE_RADIUS = 2.9 # In cm
 WHEEL_SEPARATION = 15.4 # In cm
@@ -93,10 +93,11 @@ try:
             print(value)
         except brickpi3.SensorError as error:
             print(error)
-            value = 0
+            value = None
 
+        print(f"Sonar sensor value: {value}")
         time.sleep(0.02)
-        last_value = value
+
      
     print("Done")
 
