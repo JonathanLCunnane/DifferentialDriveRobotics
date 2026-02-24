@@ -2,7 +2,6 @@ from baselib.base import BP, RIGHT_M, LEFT_M, move, rotate, init_BP, DEG_TO_RAD,
 from time import sleep
 from math import cos, sin, exp, atan2
 from random import gauss, random
-from collections import namedtuple
 import traceback
 
 STOP_TIME = 1
@@ -17,11 +16,11 @@ START_X = 84
 START_Y = 30
 START_T = 0
 
-SONAR_OFFSET = 0
+SONAR_OFFSET = 4
 
 STEP_SIZE = 20
 
-WP_EPSILON = 2
+WP_EPSILON = 5
 EPSILON = 0.1
 
 labmap = [
@@ -82,7 +81,7 @@ def draw_lines(lines: list[tuple[float, float, float, float]]):
 
 def draw_particles(particles: list[Particle]):
     particles = [
-        tuple((*adj_coord(p.x, p.y), p.theta))
+        tuple((*adj_coord(p.x, p.y), p.theta, p.weight))
         for p in particles
     ]
     print(f"drawParticles:{particles}")
@@ -112,9 +111,8 @@ class ParticleSet:
             ))
         self.particles = new_particles
 
-    def rotate(self, deg: float):
+    def rotate(self, rad: float):
         new_particles = []
-        rad = deg * DEG_TO_RAD
         
         for x, y, theta, weight in self.particles:
             new_particles.append(Particle(
@@ -208,22 +206,24 @@ try:
     particle_set = ParticleSet(start_x, start_y, 0)
     particle_set.plot()
        
-    for wp in WAYPOINTS:
+    for wp in WAYPOINTS[1:]:
 
-        while (moved_dist := None) is None or moved_dist > WP_EPSILON:
+        moved_dist = float("inf")
+        while moved_dist > WP_EPSILON:
             curr_x, curr_y, curr_theta = particle_set.get_estimate()
             print("Estimated x, y, theta: ", curr_x, curr_y, curr_theta)
             
             next_x, next_y, next_theta = waypoint((curr_x, curr_y, curr_theta), wp, STEP_SIZE, False)
             
             moved_dist = ((next_x - curr_x) ** 2 + (next_y - curr_y) ** 2) ** 0.5
-
+            print(f"Moved distance {moved_dist} to waypoint: {wp}")
 
             particle_set.rotate(next_theta - curr_theta)
             particle_set.forward(moved_dist)
             particle_set.plot()
 
             z = BP.get_sensor(SONAR_S)
+            print(f"Sonar reading {z}")
 
             particle_set.update_weights(z)
             particle_set.resample()
