@@ -40,12 +40,18 @@ def get_forward_depth(measurements: dict[float, int]):
     # negatvie angle in dict is left
     # exludde measurements that are above FOR_FORWARD_EXCLUDE_MEASUREMENTS_ABOVE
     # turn into a list of distnaces (value not key) and mutliply each by cos of the angle (key) tog et forward distance
-    forward_distances = []
+
+    # filter measurement deopths wrt to cosine angle value to check if the width from the robot is greater than FOR_FORWARD_SAFE_DIST_EITHER_SIDE so remove them
+    measurements = {angle: distance for angle, distance in measurements.items() if distance is not None and abs(distance * sin(DEG_TO_RAD * angle)) <= FOR_FORWARD_SAFE_DIST_EITHER_SIDE}
+
+
+    forward_distances = [] 
     for angle, distance in measurements.items():
         if distance is not None:
             forward_distance = distance * cos(DEG_TO_RAD * angle)
             forward_distances.append(forward_distance)
     # find the minimum of the forward distances and return it
+
     return min(forward_distances) if forward_distances else None
 
 def get_best_corners_state(robot_x, robot_y, measurements: dict[float, int]):
