@@ -73,18 +73,21 @@ def get_best_corners_state(robot_x, robot_y, measurements: dict[float, int]):
             if distance > prev_distance + CAN_EPSILON and next_distance > prev_distance + CAN_EPSILON:
                 # we have found a corner, return the translation to get to the corner
                 # this is given by the distance of the last measurement * cos of its angle (to get forward translation) and sin of its angle (to get sideways translation)
-                forward_translation = prev_distance * cos(DEG_TO_RAD * prev_angle)
-                sideways_translation = prev_distance * sin(DEG_TO_RAD * prev_angle)
+                forward_translation = prev_distance * abs(cos(DEG_TO_RAD * prev_angle))
+                sideways_translation = prev_distance * abs(sin(DEG_TO_RAD * prev_angle))
                 # if positive sonar angle=> right, but positive translation angle => left, so flip the sideways translation
                 if angle > 0:
                     sideways_translation = -sideways_translation
                 if angle < 0:
-                    left_angle = angle
+                    left_angle = prev_angle
                     left_translation = (forward_translation, sideways_translation)
                 else:
-                    right_angle = angle
+                    right_angle = prev_angle
                     right_translation = (forward_translation, sideways_translation)
                 break
+    print("BEfore  selecting corner")
+    print(f"Left translation: {left_translation} at angle {left_angle}")
+    print(f"Right translation: {right_translation} at angle {right_angle}")
 
     # select the corner with the smallest absolute angle
     # get the coordinates of the corner by adding the translation to the robot coordinates
