@@ -1,35 +1,31 @@
 from brickpi3 import SensorError
-from baselib.base import BP, RIGHT_M, LEFT_M, SONAR_M, move, rotate, init_BP, DEG_TO_RAD, EPSILON, waypoint, UseMotorMaxDPS, RAD_TO_DEG, WHEEL_SEPARATION
+from baselib.base import BP, RIGHT_M, LEFT_M, SONAR_M, move, rotate, init_BP, DEG_TO_RAD, EPSILON, waypoint, UseMotorMaxDPS, RAD_TO_DEG, WHEEL_SEPARATION, EFFECTIVE_RADIUS
 from time import sleep
 from math import cos, sin, exp, atan2, asin
 from random import gauss, random
 import traceback
 
-LINE_OFFSET = 50
-LINE_SCALE = 3
-BOX_SIZE = 210
-MAX_Y = BOX_SIZE * LINE_SCALE
 SONAR_S = BP.PORT_4
 # GOAL_DEG = 60
 ROTATE_SONAR_DPS = 90
 
 
 SAFE_FRAC = 0.25 # 
-SAFE_MARGIN = 0.25 # on either side
+SAFE_MARGIN = 0.2 # on either side
 CORNER_MARGIN = 0.17
 SAFE_DIST = 35
-FORWARD_FRAC = 0.25
+# FORWARD_FRAC = 0.25
 
 ROBOT_WIDTH = WHEEL_SEPARATION + 3 # weird bumper
 ROBOT_RADIUS = ROBOT_WIDTH / 2
 ROBOT_LENGTH = WHEEL_SEPARATION * 0.8 # guess
 
-FOR_FORWARD_EXCLUDE_MEASUREMENTS_ABOVE = SAFE_DIST * (1 + FORWARD_FRAC + SAFE_MARGIN) # can remove forward frac when we move constant
+FOR_FORWARD_EXCLUDE_MEASUREMENTS_ABOVE = SAFE_DIST * (1 + SAFE_MARGIN) # can remove forward frac when we move constant
 FOR_FORWARD_SAFE_DIST_EITHER_SIDE = ROBOT_RADIUS * (1 + SAFE_MARGIN)
 FOR_CORNER_SAFE_GAP = ROBOT_WIDTH * (1 + CORNER_MARGIN) # safe margin eiher side
 FOR_CORNERS_EXCLUDE_MEASUREMENTS_ABOVE = SAFE_DIST * (1 + SAFE_FRAC)
 
-FORWARD_HALF_DEG = atan2(FOR_FORWARD_SAFE_DIST_EITHER_SIDE, SAFE_DIST * (1 + FORWARD_FRAC)) * RAD_TO_DEG
+FORWARD_HALF_DEG = atan2(FOR_FORWARD_SAFE_DIST_EITHER_SIDE, SAFE_DIST) * RAD_TO_DEG
 CORNER_MEASURE_HALF_DEG = 60
 
 CAN_EPSILON = 20
@@ -180,37 +176,61 @@ try:
     BP.set_sensor_type(SONAR_S, BP.SENSOR_TYPE.NXT_ULTRASONIC)
     state = (0, 0, 0)
     x, y, theta = state
-    while x < 320:
-        reset_bearings(theta)
-        theta = 0
+    END_GOAL_CM = 320
+
+    MOVE_DPS = 320
+    STOP_DPS = 0
+
+    BP.set_motor_dps(RIGHT_M, MOVE_DPS)
+    BP.set_motor_dps(LEFT_M, MOVE_DPS)
+
+    encoder_start_r = BP.get_motor_encoder(RIGHT_M)
+    encoder_start_l = BP.get_motor_encoder(LEFT_M)
+    reset_bearings(theta)
+    while x < END_GOAL_CM:
         measurements = get_sonar_measurements(FORWARD_HALF_DEG)
         depth = get_forward_depth(measurements)
         print(f"Depth is {depth}")
-        while depth > SAFE_DIST * (1 + FORWARD_FRAC):
-            x_step = SAFE_DIST / (1 + FORWARD_FRAC)
-            x, y, rtheta = waypoint((x, y, theta), (x + x_step, y), x_step, verbose=False)
-            sleep(0.1)
-            theta = RAD_TO_DEG * rtheta
-            measurements = get_sonar_measurements(FORWARD_HALF_DEG)
-            depth = get_forward_depth(measurements)
-            print(f"Depth is {depth}")
-        # we are too close, work out safe space either side of obstacle to move to
-        sleep(0.2)
-        print("Getting corner measurements")
-        measurements = get_sonar_measurements(CORNER_MEASURE_HALF_DEG)
-        best_corner_tuple = get_best_corners_state(x, y, measurements)
-        if best_corner_tuple is None:
-            # we didnt find a corner => probably a wall => move forward
-            print("No corners found => probably a wall => move forward")
-            continue
+
+        if depth > SAFE_DIST:
+            BP.set_motor_dps(RIGHT_M, STOP_DPS)
+            BP.set_motor_dps(LEFT_M, STOP_DPS)
+
+            encoder_end_r = BP.get_motor_encoder(RIGHT_M)
+            encoder_end_l = BP.get_motor_encoder(LEFT_M)
+
+            encoder_moved_r = encoder_end_r - encoder_start_r
+            encoder_moved_l = encoder_end_l - encoder_start_l
+            encoder_degrees_moved = (encoder_moved_r + encoder_moved_l) / 2
+            cm_moved = encoder_degrees_moved * (EFFECTIVE_RADIUS * DEG_TO_RAD)
+            x += cm_moved
+
+            # we are too close, work out safe space either side of obstacle to move to
+            sleep(0.15)
+
+            print("Getting corner measurements")
+            measurements = get_sonar_measurements(CORNER_MEASURE_HALF_DEG)
+            best_corner_tuple = get_best_corners_state(x, y, measurements)
+
+            if best_corner_tuple is None:
+                # we didnt find a corner => probably a wall => move forward
+                print("No corners found => probably a wall => move forward")
+            else:
+                corner_x, corner_y, corner_angle = best_corner_tuple
+                print(f"We are at {x}, {y} with theta {theta}")
+                print(f"Best corner is at {corner_x}, {corner_y} with angle {corner_angle}")
+                to_x, to_y = get_waypoint_from_corner(x, y, corner_x, corner_y, corner_angle)
+                print(f"Moving to {to_x}, {to_y}")
+                x, y, rtheta = waypoint((x, y, theta), (to_x, to_y), verbose=False)
+                theta = RAD_TO_DEG * rtheta
+                reset_bearings(theta)
+                theta = 0
+                
+            BP.set_motor_dps(RIGHT_M, MOVE_DPS)
+            BP.set_motor_dps(LEFT_M, MOVE_DPS)
         else:
-            corner_x, corner_y, corner_angle = best_corner_tuple
-            print(f"We are at {x}, {y} with theta {theta}")
-            print(f"Best corner is at {corner_x}, {corner_y} with angle {corner_angle}")
-            to_x, to_y = get_waypoint_from_corner(x, y, corner_x, corner_y, corner_angle)
-            print(f"Moving to {to_x}, {to_y}")
-            x, y, rtheta = waypoint((x, y, theta), (to_x, to_y), verbose=False)
-            theta = RAD_TO_DEG * rtheta
+            print(f"Moving foward") # remove later, debug
+
 
             
             
