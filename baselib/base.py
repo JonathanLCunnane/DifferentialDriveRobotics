@@ -145,8 +145,9 @@ def rotate(
         goal_deg = -floor(rotate_const * (wheel_dist / effective_radius) * RAD_TO_DEG)
         start_r = BP.get_motor_encoder(RIGHT_M)
         start_l = BP.get_motor_encoder(LEFT_M)
-        print(f"Motor R status {BP.get_motor_status(RIGHT_M)} start {start_r} goal {start_r + goal_deg}")
-        print(f"Motor L status {BP.get_motor_status(LEFT_M)} start {start_l} goal {start_l + goal_deg}")
+        if verbose:
+            print(f"Motor R status {BP.get_motor_status(RIGHT_M)} start {start_r} goal {start_r + goal_deg}")
+            print(f"Motor L status {BP.get_motor_status(LEFT_M)} start {start_l} goal {start_l + goal_deg}")
         moved = 0
         BP.set_motor_position(RIGHT_M, start_r - goal_deg)
         BP.set_motor_position(LEFT_M, start_l + goal_deg)
