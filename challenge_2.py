@@ -178,7 +178,7 @@ try:
     x, y, theta = state
     END_GOAL_CM = 320
 
-    MOVE_DPS = 320
+    MOVE_DPS = 580
     STOP_DPS = 0
     reset_bearings(theta)
     sleep(0.8)
