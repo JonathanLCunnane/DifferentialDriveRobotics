@@ -30,9 +30,9 @@ FOR_CORNER_SAFE_GAP = ROBOT_WIDTH * (1 + SAFE_MARGIN) # safe margin eiher side
 FOR_CORNERS_EXCLUDE_MEASUREMENTS_ABOVE = SAFE_DIST * (1 + SAFE_FRAC)
 
 FORWARD_HALF_DEG = atan2(FOR_FORWARD_SAFE_DIST_EITHER_SIDE, SAFE_DIST * (1 + FORWARD_FRAC)) * RAD_TO_DEG
-CORNER_MEASURE_HALF_DEG = 60
+CORNER_MEASURE_HALF_DEG = 30
 
-CAN_EPSILON = 40
+CAN_EPSILON = 20
 
 
 # problem: fix so that forward is moving constant until exactly within epsilon of safe dist
@@ -64,6 +64,8 @@ def get_best_corners_state(robot_x, robot_y, measurements: dict[float, int]):
     right_translation = (0, 0)
     left_angle = None
     right_angle = None
+    print(f"Left measurements: {left_measurements}")
+    print(f"Right measurements: {right_measurements}")
     for measurement in [left_measurements, right_measurements]:
         # rotate funciton (postiive angle => left but with sonar measurements positive angle => right)
         # from 0 to higher magnitude angles, check if its a corner
