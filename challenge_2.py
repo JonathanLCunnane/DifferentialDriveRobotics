@@ -196,8 +196,10 @@ try:
             x += cm_moved
 
             # we are too close, work out safe space either side of obstacle to move to
-            sleep(0.15)
 
+            sleep(0.15)
+            BP.set_motor_position(SONAR_M, 0)
+            sleep(0.5)
             print("Getting corner measurements")
             measurements = get_sonar_measurements(CORNER_MEASURE_HALF_DEG)
             best_corner_tuple = get_best_corners_state(x, y, measurements)
