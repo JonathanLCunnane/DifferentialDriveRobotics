@@ -177,6 +177,7 @@ try:
         reset_bearings(theta)
         measurements = get_sonar_measurements(FORWARD_HALF_DEG)
         depth = get_forward_depth(measurements)
+        print(f"Depth is {depth}")
         while depth > SAFE_DIST * (1 + FORWARD_FRAC):
             x_step = SAFE_DIST / FORWARD_FRAC
             x, y, rtheta = waypoint((x, y, theta), (x + x_step, y), x_step, verbose=False)
@@ -184,12 +185,15 @@ try:
             theta = RAD_TO_DEG * rtheta
             measurements = get_sonar_measurements(FORWARD_HALF_DEG)
             depth = get_forward_depth(measurements)
-        
+            print(f"Depth is {depth}")
         # we are too close, work out safe space either side of obstacle to move to
         sleep(0.2)
+        print("Getting corner measurements")
         measurements = get_sonar_measurements(CORNER_MEASURE_HALF_DEG)
         corner_x, corner_y, corner_angle = get_best_corners_state(x, y, measurements)
+        print(f"Best corner is at {corner_x}, {corner_y} with angle {corner_angle}")
         to_x, to_y = get_waypoint_from_corner(x, y, corner_x, corner_y, corner_angle)
+        print(f"Moving to {to_x}, {to_y}")
         x, y, rtheta = waypoint((x, y, theta), (to_x, to_y))
         theta = RAD_TO_DEG * rtheta
 
