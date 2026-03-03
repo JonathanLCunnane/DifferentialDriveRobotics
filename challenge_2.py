@@ -192,7 +192,7 @@ try:
         depth = get_forward_depth(measurements)
         print(f"Depth is {depth}")
 
-        if depth > SAFE_DIST:
+        if depth <= SAFE_DIST:
             BP.set_motor_dps(RIGHT_M, STOP_DPS)
             BP.set_motor_dps(LEFT_M, STOP_DPS)
 
