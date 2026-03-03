@@ -134,7 +134,7 @@ def reset_bearings(theta_bearing):
     # rotate theta bearing backward to return to 0 degrees
     # convert theta bearing from radians to degrees
     print(f"Resetting bearings to 0 degrees from theta bearing {theta_bearing}")
-    rotate(-theta_bearing)
+    rotate(-theta_bearing, verbose=True)
     BP.set_motor_position(SONAR_M, 0)
     return
 
@@ -176,6 +176,7 @@ try:
     x, y, theta = state
     while x < 320:
         reset_bearings(theta)
+        theta = 0
         measurements = get_sonar_measurements(FORWARD_HALF_DEG)
         depth = get_forward_depth(measurements)
         print(f"Depth is {depth}")
