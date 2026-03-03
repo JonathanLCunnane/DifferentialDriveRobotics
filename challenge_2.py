@@ -112,7 +112,10 @@ def get_waypoint_from_corner(robot_x, robot_y, corner_x, corner_y, angle_to_corn
     # use half_safety_gap /2 for safety margin opposite angle
     # 2sine-1(safety_gap / corner_distance)
     safety_gap = FOR_CORNER_SAFE_GAP / 2
-    to_theta = angle_to_corner + 2 * asin((safety_gap / 2) / distance_to_corner) * RAD_TO_DEG
+    extra_deg_rotation =2 * asin((safety_gap / 2) / distance_to_corner) * RAD_TO_DEG
+    if angle_to_corner < 0:
+        extra_deg_rotation = -abs(extra_deg_rotation)
+    to_theta = angle_to_corner + extra_deg_rotation
     print(f"Distance to corner is {distance_to_corner}, angle to corner is {angle_to_corner}, to theta is {to_theta}")
     # make sure to_theta has the same sign as angle_to_corner
     if angle_to_corner < 0:
