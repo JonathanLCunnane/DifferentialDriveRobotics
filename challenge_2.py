@@ -181,6 +181,7 @@ try:
     MOVE_DPS = 320
     STOP_DPS = 0
     reset_bearings(theta)
+    sleep(0.8)
     BP.set_motor_dps(RIGHT_M, MOVE_DPS)
     BP.set_motor_dps(LEFT_M, MOVE_DPS)
 
@@ -224,6 +225,7 @@ try:
                 theta = RAD_TO_DEG * rtheta
                 reset_bearings(theta)
                 theta = 0
+                sleep(0.8)
                 
             BP.set_motor_dps(RIGHT_M, MOVE_DPS)
             BP.set_motor_dps(LEFT_M, MOVE_DPS)
