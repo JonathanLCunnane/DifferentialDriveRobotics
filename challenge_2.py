@@ -46,7 +46,7 @@ def get_forward_depth(measurements: dict[float, int]):
     # turn into a list of distnaces (value not key) and mutliply each by cos of the angle (key) tog et forward distance
     forward_distances = []
     for angle, distance in measurements.items():
-        if distance is not None and distance < FOR_FORWARD_EXCLUDE_MEASUREMENTS_ABOVE:
+        if distance is not None:
             forward_distance = distance * cos(DEG_TO_RAD * angle)
             forward_distances.append(forward_distance)
     # find the minimum of the forward distances and return it
