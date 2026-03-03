@@ -106,26 +106,13 @@ def get_best_corners_state(robot_x, robot_y, measurements: dict[float, int]):
 
 def get_waypoint_from_corner(robot_x, robot_y, corner_x, corner_y, angle_to_corner):
     # distance to corner
-    distance_to_corner = ((corner_x - robot_x)**2 + (corner_y - robot_y)**2)**0.5
-    # get theta to point we want to move
-    # use half_safety_gap /2 for safety margin opposite angle
-    # 2sine-1(safety_gap / corner_distance)
     safety_gap = FOR_CORNER_SAFE_GAP / 2
-    extra_deg_rotation =2 * asin((safety_gap / 2) / distance_to_corner) * RAD_TO_DEG
     if angle_to_corner < 0:
-        extra_deg_rotation = -abs(extra_deg_rotation)
-    to_theta = angle_to_corner + extra_deg_rotation
-    print(f"Distance to corner is {distance_to_corner}, angle to corner is {angle_to_corner}, to theta is {to_theta}")
-    # make sure to_theta has the same sign as angle_to_corner
-    if angle_to_corner < 0:
-        to_theta = -abs(to_theta)
-    else:
-        to_theta = abs(to_theta)
+        safety_gap = -safety_gap
 
-    # get the coordinates of to theta bearing at distance to corner from robot x and robot y
-    to_x = robot_x + distance_to_corner * cos(DEG_TO_RAD * to_theta)
-    to_y = robot_y + distance_to_corner * sin(DEG_TO_RAD * to_theta)
-    return to_x, to_y
+    to_y = robot_y + safety_gap
+    print(f"Current y at {robot_y}, corner at {corner_y}, go_to {to_y}")
+    return corner_x, to_y
 
     # get position distance to corner + safety gap in the direction of corner 
 
