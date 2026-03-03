@@ -26,7 +26,7 @@ ROBOT_LENGTH = WHEEL_SEPARATION * 0.8 # guess
 
 FOR_FORWARD_EXCLUDE_MEASUREMENTS_ABOVE = SAFE_DIST * (1 + FORWARD_FRAC + SAFE_MARGIN) # can remove forward frac when we move constant
 FOR_FORWARD_SAFE_DIST_EITHER_SIDE = ROBOT_RADIUS * (1 + SAFE_MARGIN)
-FOR_CORNER_SAFE_GAP = ROBOT_WIDTH * (1 + SAFE_MARGIN * 2 + 0.2) # safe margin eiher side
+FOR_CORNER_SAFE_GAP = ROBOT_WIDTH * (1 + SAFE_MARGIN) # safe margin eiher side
 FOR_CORNERS_EXCLUDE_MEASUREMENTS_ABOVE = SAFE_DIST * (1 + SAFE_FRAC)
 
 FORWARD_HALF_DEG = atan2(FOR_FORWARD_SAFE_DIST_EITHER_SIDE, SAFE_DIST * (1 + FORWARD_FRAC)) * RAD_TO_DEG
@@ -71,7 +71,6 @@ def get_best_corners_state(robot_x, robot_y, measurements: dict[float, int]):
         for i in range(1, len(measurement)-1):
             angle, distance = measurement[i]
             prev_angle, prev_distance = measurement[i-1]
-            cur_angle, cur_distance = measurement[i]
             next_angle, next_distance = measurement[i+1]
             if distance > prev_distance + CAN_EPSILON and next_distance > prev_distance + CAN_EPSILON:
                 # we have found a corner, return the translation to get to the corner
@@ -113,7 +112,7 @@ def get_waypoint_from_corner(robot_x, robot_y, corner_x, corner_y, angle_to_corn
     # use half_safety_gap /2 for safety margin opposite angle
     # 2sine-1(safety_gap / corner_distance)
     safety_gap = FOR_CORNER_SAFE_GAP / 2
-    to_theta = 2 * asin(safety_gap / distance_to_corner)
+    to_theta = angle_to_corner + 2 * asin((safety_gap / 2) / distance_to_corner)
     # make sure to_theta has the same sign as angle_to_corner
     if angle_to_corner < 0:
         to_theta = -abs(to_theta)
