@@ -178,7 +178,7 @@ try:
         depth = get_forward_depth(measurements)
         print(f"Depth is {depth}")
         while depth > SAFE_DIST * (1 + FORWARD_FRAC):
-            x_step = SAFE_DIST / FORWARD_FRAC
+            x_step = SAFE_DIST / (1 + FORWARD_FRAC)
             x, y, rtheta = waypoint((x, y, theta), (x + x_step, y), x_step, verbose=False)
             sleep(0.1)
             theta = RAD_TO_DEG * rtheta
