@@ -6,6 +6,7 @@ BP = brickpi3.BrickPi3() # Create an instance of the BrickPi3 class. BP will be 
 
 RIGHT_M = BP.PORT_C
 LEFT_M = BP.PORT_B
+SONAR_M = BP.PORT_D
 
 EFFECTIVE_RADIUS = 2.0 # In cm
 WHEEL_SEPARATION = 15.4 # In cm
@@ -16,9 +17,34 @@ ROTATE_CONST = 1.08
 DIST_CONST = 100/100# 40 / (40 - 2.6)
 MAX_POWER = 150
 MAX_DPS = 720
+ROTATE_MAX_DPS = 180
 LEFT_CONST = 1#1.1275
 RIGHT_CONST = 1
-CORRECTION_DEG = EPSILON + 5
+CORRECTION_DEG = 0#EPSILON + 5
+
+#for use with with statement
+class UseMotorMaxDPS():
+    def __init__(self, temp_dps):
+        self.temp_dps = temp_dps
+        self.original_dps = None
+
+    def __enter__(self):
+        global MAX_DPS
+        self.original_dps = MAX_DPS
+        MAX_DPS = self.temp_dps
+        BP.set_motor_limits(LEFT_M, LEFT_CONST * MAX_POWER, MAX_DPS)
+        BP.set_motor_limits(RIGHT_M, RIGHT_CONST * MAX_POWER, MAX_DPS)
+        BP.set_motor_limits(SONAR_M, MAX_POWER, MAX_DPS)
+        return MAX_DPS #return so can use with 'as'
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        global MAX_DPS
+        MAX_DPS = self.original_dps
+        BP.set_motor_limits(LEFT_M, LEFT_CONST * MAX_POWER, MAX_DPS)
+        BP.set_motor_limits(RIGHT_M, RIGHT_CONST * MAX_POWER, MAX_DPS)
+
+
+
 def waypoint(state: tuple[float, float, float], wp: tuple[float, float], max_dist: float=None, verbose=True):
     """Where theta is in radians."""
     max_dist = float("inf") if max_dist is None else max_dist
@@ -46,11 +72,14 @@ def init_BP():
     try:
         BP.offset_motor_encoder(RIGHT_M, BP.get_motor_encoder(RIGHT_M)) # reset right motor 
         BP.offset_motor_encoder(LEFT_M, BP.get_motor_encoder(LEFT_M)) # reset left motor
+        BP.offset_motor_encoder(SONAR_M, BP.get_motor_encoder(SONAR_M)) # reset sonar motor
+
     except IOError as error:
         print(error)
 
     BP.set_motor_limits(LEFT_M, LEFT_CONST * MAX_POWER, MAX_DPS)
     BP.set_motor_limits(RIGHT_M, RIGHT_CONST * MAX_POWER, MAX_DPS)
+    BP.set_motor_limits(SONAR_M, MAX_POWER, MAX_DPS)
 
 def move(
     cm: float,
@@ -107,25 +136,26 @@ def rotate(
     """
     deg - The goal degrees to rotate.
     """
-    rad = deg * DEG_TO_RAD
-    wheel_dist = rad * (wheel_separation / 2)
-    goal_deg = -floor(rotate_const * (wheel_dist / effective_radius) * RAD_TO_DEG)
-    start_r = BP.get_motor_encoder(RIGHT_M)
-    start_l = BP.get_motor_encoder(LEFT_M)
-    print(f"Motor R status {BP.get_motor_status(RIGHT_M)} start {start_r} goal {start_r + goal_deg}")
-    print(f"Motor L status {BP.get_motor_status(LEFT_M)} start {start_l} goal {start_l + goal_deg}")
-    moved = 0
-    BP.set_motor_position(RIGHT_M, start_r - goal_deg)
-    BP.set_motor_position(LEFT_M, start_l + goal_deg)
-    while abs(moved - goal_deg) > EPSILON:
-        try:
-            now_r = BP.get_motor_encoder(RIGHT_M)
-            now_l = BP.get_motor_encoder(LEFT_M)
-        except IOError as error:
-            print(error)
+    with UseMotorMaxDPS(ROTATE_MAX_DPS):
+        rad = deg * DEG_TO_RAD
+        wheel_dist = rad * (wheel_separation / 2)
+        goal_deg = -floor(rotate_const * (wheel_dist / effective_radius) * RAD_TO_DEG)
+        start_r = BP.get_motor_encoder(RIGHT_M)
+        start_l = BP.get_motor_encoder(LEFT_M)
+        print(f"Motor R status {BP.get_motor_status(RIGHT_M)} start {start_r} goal {start_r + goal_deg}")
+        print(f"Motor L status {BP.get_motor_status(LEFT_M)} start {start_l} goal {start_l + goal_deg}")
+        moved = 0
+        BP.set_motor_position(RIGHT_M, start_r - goal_deg)
+        BP.set_motor_position(LEFT_M, start_l + goal_deg)
+        while abs(moved - goal_deg) > EPSILON:
+            try:
+                now_r = BP.get_motor_encoder(RIGHT_M)
+                now_l = BP.get_motor_encoder(LEFT_M)
+            except IOError as error:
+                print(error)
 
-        if verbose:
-            print(f"Motor R status {BP.get_motor_status(RIGHT_M)} now {now_r}")
-            print(f"Motor L status {BP.get_motor_status(LEFT_M)} now {now_l}")
-        moved = (-now_r + start_r - start_l + now_l) / 2
-        time.sleep(0.05)
+            if verbose:
+                print(f"Motor R status {BP.get_motor_status(RIGHT_M)} now {now_r}")
+                print(f"Motor L status {BP.get_motor_status(LEFT_M)} now {now_l}")
+            moved = (-now_r + start_r - start_l + now_l) / 2
+            time.sleep(0.05)
