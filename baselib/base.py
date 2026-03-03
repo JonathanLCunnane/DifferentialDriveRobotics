@@ -58,10 +58,12 @@ def waypoint(state: tuple[float, float, float], wp: tuple[float, float], max_dis
         return state
     to_turn = (abs_alpha - theta) * RAD_TO_DEG
     to_turn = ((to_turn + 180) % 360) - 180
-    print(f"Waypoint rotating {to_turn} from {theta}")
+    if verbose:
+        print(f"Waypoint rotating {to_turn} from {theta}")
     rotate(to_turn, verbose=verbose)
     time.sleep(0)
-    print(f"Waypoint moving {distance}")
+    if verbose:
+        print(f"Waypoint moving {distance}")
     move(distance, verbose=verbose)
     next_x = x + ((Wx - x) * frac)
     next_y = y + ((Wy - y) * frac)
@@ -95,8 +97,9 @@ def move(
     goal_deg = floor(dist_const * (cm / effective_radius) * RAD_TO_DEG)
     start_r = BP.get_motor_encoder(RIGHT_M)
     start_l = BP.get_motor_encoder(LEFT_M)
-    print(f"Motor R status {BP.get_motor_status(RIGHT_M)} start {start_r} goal {start_r + goal_deg}")
-    print(f"Motor L status {BP.get_motor_status(LEFT_M)} start {start_l} goal {start_l + goal_deg}")
+    if verbose:
+        print(f"Motor R status {BP.get_motor_status(RIGHT_M)} start {start_r} goal {start_r + goal_deg}")
+        print(f"Motor L status {BP.get_motor_status(LEFT_M)} start {start_l} goal {start_l + goal_deg}")
     ## SYSTEMATIC LEFT FIRST MOTOR ERROR CORRECTION ##
     correction_moved = 0
     BP.set_motor_position(RIGHT_M, start_r + CORRECTION_DEG)

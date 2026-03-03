@@ -17,7 +17,7 @@ VERBOSE = True
 
 SAFE_FRAC = 0.25 # 
 SAFE_MARGIN = 0.3 # on either side
-SAFE_DIST = 20
+SAFE_DIST = 35
 FORWARD_FRAC = 0.25
 
 ROBOT_WIDTH = WHEEL_SEPARATION + 3 # weird bumper
@@ -157,7 +157,7 @@ def get_sonar_measurements(half_deg_bearing) -> dict[float, int]:
                 res[sonar_deg] = sonar_value 
             sleep(0.02) 
             sonar_moved = sonar_deg - sonar_start
-            print(f"Motor Sonar status {BP.get_motor_status(SONAR_M)} now {sonar_deg}")
+            # print(f"Motor Sonar status {BP.get_motor_status(SONAR_M)} now {sonar_deg}")
         return res
 
     with UseMotorMaxDPS(ROTATE_SONAR_DPS):
@@ -193,7 +193,7 @@ try:
         print(f"Best corner is at {corner_x}, {corner_y} with angle {corner_angle}")
         to_x, to_y = get_waypoint_from_corner(x, y, corner_x, corner_y, corner_angle)
         print(f"Moving to {to_x}, {to_y}")
-        x, y, rtheta = waypoint((x, y, theta), (to_x, to_y))
+        x, y, rtheta = waypoint((x, y, theta), (to_x, to_y), verbose=False)
         theta = RAD_TO_DEG * rtheta
 
             
