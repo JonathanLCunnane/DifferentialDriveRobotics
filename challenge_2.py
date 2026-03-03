@@ -12,7 +12,6 @@ MAX_Y = BOX_SIZE * LINE_SCALE
 SONAR_S = BP.PORT_4
 # GOAL_DEG = 60
 ROTATE_SONAR_DPS = 90
-VERBOSE = True
 
 
 SAFE_FRAC = 0.25 # 
@@ -104,7 +103,8 @@ def get_best_corners_state(robot_x, robot_y, measurements: dict[float, int]):
     elif right_angle is not None:
         return (robot_x+right_translation[0], robot_y+right_translation[1], -right_angle)
     else:        
-        raise Exception("No corners found")
+        print("No corners found => probably a wall => move forward")
+        return None
     
 
 def get_waypoint_from_corner(robot_x, robot_y, corner_x, corner_y, angle_to_corner):
@@ -139,7 +139,7 @@ def reset_bearings(theta_bearing):
     # rotate theta bearing backward to return to 0 degrees
     # convert theta bearing from radians to degrees
     print(f"Resetting bearings to 0 degrees from theta bearing {theta_bearing}")
-    rotate(-theta_bearing, verbose=True)
+    rotate(-theta_bearing, verbose=False)
     BP.set_motor_position(SONAR_M, 0)
     return
 
@@ -197,12 +197,19 @@ try:
         sleep(0.2)
         print("Getting corner measurements")
         measurements = get_sonar_measurements(CORNER_MEASURE_HALF_DEG)
-        corner_x, corner_y, corner_angle = get_best_corners_state(x, y, measurements)
-        print(f"Best corner is at {corner_x}, {corner_y} with angle {corner_angle}")
-        to_x, to_y = get_waypoint_from_corner(x, y, corner_x, corner_y, corner_angle)
-        print(f"Moving to {to_x}, {to_y}")
-        x, y, rtheta = waypoint((x, y, theta), (to_x, to_y), verbose=False)
-        theta = RAD_TO_DEG * rtheta
+        best_corner_tuple = get_best_corners_state(x, y, measurements)
+        if best_corner_tuple is None:
+            # we didnt find a corner => probably a wall => move forward
+            print("No corners found => probably a wall => move forward")
+            continue
+        else:
+            corner_x, corner_y, corner_angle = best_corner_tuple
+            print(f"We are at {x}, {y} with theta {theta}")
+            print(f"Best corner is at {corner_x}, {corner_y} with angle {corner_angle}")
+            to_x, to_y = get_waypoint_from_corner(x, y, corner_x, corner_y, corner_angle)
+            print(f"Moving to {to_x}, {to_y}")
+            x, y, rtheta = waypoint((x, y, theta), (to_x, to_y), verbose=False)
+            theta = RAD_TO_DEG * rtheta
 
             
             
