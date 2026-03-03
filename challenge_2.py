@@ -113,6 +113,7 @@ def get_waypoint_from_corner(robot_x, robot_y, corner_x, corner_y, angle_to_corn
     # 2sine-1(safety_gap / corner_distance)
     safety_gap = FOR_CORNER_SAFE_GAP / 2
     to_theta = angle_to_corner + 2 * asin((safety_gap / 2) / distance_to_corner) * RAD_TO_DEG
+    print(f"Distance to corner is {distance_to_corner}, angle to corner is {angle_to_corner}, to theta is {to_theta}")
     # make sure to_theta has the same sign as angle_to_corner
     if angle_to_corner < 0:
         to_theta = -abs(to_theta)
@@ -132,6 +133,7 @@ def reset_bearings(theta_bearing):
     # sets the bearings of the motors to 0 and rotation sensor bearing to 0
     # rotate theta bearing backward to return to 0 degrees
     # convert theta bearing from radians to degrees
+    print(f"Resetting bearings to 0 degrees from theta bearing {theta_bearing}")
     rotate(-theta_bearing)
     BP.set_motor_position(SONAR_M, 0)
     return
