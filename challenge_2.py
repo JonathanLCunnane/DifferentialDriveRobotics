@@ -110,7 +110,7 @@ def get_waypoint_from_corner(robot_x, robot_y, corner_x, corner_y, angle_to_corn
     if angle_to_corner < 0:
         safety_gap = -safety_gap
 
-    to_y = robot_y + safety_gap
+    to_y = corner_y + safety_gap
     print(f"Current y at {robot_y}, corner at {corner_y}, go_to {to_y}")
     return corner_x, to_y
 
