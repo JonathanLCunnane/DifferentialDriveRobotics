@@ -180,13 +180,12 @@ try:
 
     MOVE_DPS = 320
     STOP_DPS = 0
-
+    reset_bearings(theta)
     BP.set_motor_dps(RIGHT_M, MOVE_DPS)
     BP.set_motor_dps(LEFT_M, MOVE_DPS)
 
     encoder_start_r = BP.get_motor_encoder(RIGHT_M)
     encoder_start_l = BP.get_motor_encoder(LEFT_M)
-    reset_bearings(theta)
     while x < END_GOAL_CM:
         measurements = get_sonar_measurements(FORWARD_HALF_DEG)
         depth = get_forward_depth(measurements)
